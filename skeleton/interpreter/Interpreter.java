@@ -112,7 +112,14 @@ public class Interpreter {
             BinaryExpr binaryExpr = (BinaryExpr)expr;
             switch (binaryExpr.getOperator()) {
                 case BinaryExpr.PLUS: return (Long)evaluate(binaryExpr.getLeftExpr()) + (Long)evaluate(binaryExpr.getRightExpr());
-                case BinaryExpr.MINUS: return (Long)evaluate(binaryExpr.getLeftExpr()) - (Long)evaluate(binaryExpr.getRightExpr());
+                case BinaryExpr.BMINUS: return (Long)evaluate(binaryExpr.getLeftExpr()) - (Long)evaluate(binaryExpr.getRightExpr());
+                case BinaryExpr.MULT: return (Long)evaluate(binaryExpr.getLeftExpr()) * (Long)evaluate(binaryExpr.getRightExpr());
+                default: throw new RuntimeException("Unhandled operator");
+            }
+        } else if (expr instanceof UnaryExpr) {
+            UnaryExpr unaryExpr = (UnaryExpr)expr;
+            switch (unaryExpr.getOperator()) {
+                case UnaryExpr.UMINUS: return (Long)evaluate(0 - unaryExpr.getExpr());
                 default: throw new RuntimeException("Unhandled operator");
             }
         } else {

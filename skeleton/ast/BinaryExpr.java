@@ -3,7 +3,8 @@ package ast;
 public class BinaryExpr extends Expr {
 
     public static final int PLUS = 1;
-    public static final int MINUS = 2;
+    public static final int BMINUS = 2;
+    public static final int MULT = 3;
 
     final Expr expr1;
     final int operator;
@@ -33,7 +34,8 @@ public class BinaryExpr extends Expr {
         String s = null;
         switch (operator) {
             case PLUS:  s = "+"; break;
-            case MINUS: s = "-"; break;
+            case BMINUS: s = "-"; break;
+            case MULT: s = "*"; break;
         }
         return "(" + expr1 + " " + s + " " + expr2 + ")";
     }

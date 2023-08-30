@@ -27,19 +27,31 @@ parser code {:
 
 :};
 
-terminal PLUS, MINUS, LPAREN, RPAREN;
+terminal PLUS, BMINUS, MULT, UMINUS, LPAREN, RPAREN, RETURN;
 terminal Long    INTCONST;
 
 non terminal Program         program;
+non terminal Return          return;
 non terminal Expr            expr;
 non terminal BinaryExpr      binaryExpr;
+non terminal UnaryExpr       unaryExpr;
 
-precedence left PLUS, MINUS;
+precedence left MULT;
+precedence left PLUS, BMINUS, UMINUS;
+precedence left ELSE; // resolves dangling else
 
 start with program;
 
-program ::= expr:e
+program ::= return:r
+            {: RESULT = new Program(r, loc(rleft, rright)); :}
+         ;
+         /*expr:e
             {: RESULT = new Program(e, loc(eleft, eright)); :}
+         */
+
+
+return ::= RETURN expr:e 
+            {: RESULT = new Return(c, loc(cleft, cright)); :}
          ;
 
 expr ::= INTCONST:c
@@ -48,10 +60,19 @@ expr ::= INTCONST:c
          {: RESULT = e; :}
       |  LPAREN expr:e RPAREN
          {: RESULT = e; :}
+      |  unaryExpr:e
+         {: RESULT = e; :}
       ;
 
 binaryExpr ::= expr:e1 PLUS expr:e2
                {: RESULT = new BinaryExpr(e1, BinaryExpr.PLUS, e2, loc(e1left, e1right)); :}
-            |  expr:e1 MINUS expr:e2
-               {: RESULT = new BinaryExpr(e1, BinaryExpr.MINUS, e2, loc(e1left, e1right)); :}
+            |  expr:e1 BMINUS expr:e2
+               {: RESULT = new BinaryExpr(e1, BinaryExpr.BMINUS, e2, loc(e1left, e1right)); :}
+            |  expr:e1 MULT expr:e2
+               {: RESULT = new BinaryExpr(e1, BinaryExpr.MULT, e2, loc(e1left, e1right)); :}
             ;
+
+unaryExpr ::= UMINUS expr:e
+               {: RESULT = new UnaryExpr(e, UnaryExpr.UMINUS, loc(eleft)); :}
+            ;
+         
