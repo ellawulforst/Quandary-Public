@@ -62,11 +62,12 @@ white_space = {new_line} | [ \t\f]
 
 /* separators */
 "+"               { return symbol("+",  PLUS); }
-"-"               { return symbol("-",  BMINUS); }
+"-"               { return symbol("-",  MINUS); }
 "*"               { return symbol("*",  MULT); }
-"-"               { return symbol("-",  UMINUS); }
 "("               { return symbol("(",  LPAREN); }
 ")"               { return symbol(")",  RPAREN); }
+"return"          { return symbol("return",  RETURN); }
+";"               { return symbol(";",  SEMI); }
 
 /* comments */
 "/*" [^*] ~"*/" | "/*" "*"+ "/"

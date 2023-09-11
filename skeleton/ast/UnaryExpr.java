@@ -1,20 +1,22 @@
 package ast;
 
-public class UnaryExpr extends BinaryExpr {
+public class UnaryExpr extends Expr {
 
     public static final int UMINUS = 1;
 
-    final Expr expr1;
+    final Expr expr;
     final int operator;
 
     public UnaryExpr(Expr expr1, int operator, Location loc) {
         super(loc);
-        this.expr1 = expr1;
+        this.expr = expr1;
+        //System.out.println("unaryexpr this.expr:" + this.expr);
         this.operator = operator;
     }
 
     public Expr getExpr() {
-        return expr1;
+        //System.out.println("unaryexpr getExpr:" + expr);
+        return expr;
     }
 
     public int getOperator() {
@@ -27,6 +29,6 @@ public class UnaryExpr extends BinaryExpr {
         switch (operator) {
             case UMINUS: s = "-"; break;
         }
-        return "(" + s + " " + expr1 + ")";
+        return "(" + s + " " + expr + ")";
     }
 }

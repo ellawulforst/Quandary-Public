@@ -27,52 +27,50 @@ parser code {:
 
 :};
 
-terminal PLUS, BMINUS, MULT, UMINUS, LPAREN, RPAREN, RETURN;
+terminal PLUS, LPAREN, RPAREN;
+terminal RETURN, MULT, MINUS, SEMI, UMINUS;
 terminal Long    INTCONST;
 
 non terminal Program         program;
 non terminal Return          return;
 non terminal Expr            expr;
 non terminal BinaryExpr      binaryExpr;
-non terminal UnaryExpr       unaryExpr;
 
+
+precedence left PLUS, MINUS;
 precedence left MULT;
-precedence left PLUS, BMINUS, UMINUS;
-precedence left ELSE; // resolves dangling else
+precedence left UMINUS;
+//precedence left ELSE; // resolves dangling else
 
 start with program;
 
-program ::= return:r
+program ::= expr:e
+            {: RESULT = new Program(e, loc(eleft, eright)); :}
+         |
+            return:r
             {: RESULT = new Program(r, loc(rleft, rright)); :}
          ;
-         /*expr:e
-            {: RESULT = new Program(e, loc(eleft, eright)); :}
-         */
 
-
-return ::= RETURN expr:e 
-            {: RESULT = new Return(c, loc(cleft, cright)); :}
-         ;
+return ::= RETURN expr:e SEMI
+         {: RESULT = new Return(e, loc(eleft, eright)); :}
+      ;
 
 expr ::= INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
+      |  MINUS expr:e 
+         {: RESULT = new UnaryExpr(e, UnaryExpr.UMINUS, loc(eleft, eright)); :}
+         %prec UMINUS
       |  binaryExpr:e
          {: RESULT = e; :}
       |  LPAREN expr:e RPAREN
-         {: RESULT = e; :}
-      |  unaryExpr:e
          {: RESULT = e; :}
       ;
 
 binaryExpr ::= expr:e1 PLUS expr:e2
                {: RESULT = new BinaryExpr(e1, BinaryExpr.PLUS, e2, loc(e1left, e1right)); :}
-            |  expr:e1 BMINUS expr:e2
+            |  expr:e1 MINUS expr:e2
                {: RESULT = new BinaryExpr(e1, BinaryExpr.BMINUS, e2, loc(e1left, e1right)); :}
             |  expr:e1 MULT expr:e2
                {: RESULT = new BinaryExpr(e1, BinaryExpr.MULT, e2, loc(e1left, e1right)); :}
-            ;
-
-unaryExpr ::= UMINUS expr:e
-               {: RESULT = new UnaryExpr(e, UnaryExpr.UMINUS, loc(eleft)); :}
             ;
          
