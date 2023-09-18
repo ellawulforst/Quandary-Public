@@ -57,13 +57,12 @@ return ::= RETURN expr:e SEMI
 
 expr ::= INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
-      |  MINUS expr:e 
-         {: RESULT = new UnaryExpr(e, loc(eleft, eright)); :}
-         %prec UMINUS
       |  binaryExpr:e
          {: RESULT = e; :}
       |  LPAREN expr:e RPAREN
          {: RESULT = e; :}
+      |  MINUS expr:e 
+         {: RESULT = new UnaryExpr(e, loc(eleft, eright)); :}
       ;
 
 binaryExpr ::= expr:e1 PLUS expr:e2
