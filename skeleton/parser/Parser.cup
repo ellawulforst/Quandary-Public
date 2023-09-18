@@ -58,7 +58,7 @@ return ::= RETURN expr:e SEMI
 expr ::= INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
       |  MINUS expr:e 
-         {: RESULT = new UnaryExpr(e, UnaryExpr.UMINUS, loc(eleft, eright)); :}
+         {: RESULT = new UnaryExpr(e, loc(eleft, eright)); :}
          %prec UMINUS
       |  binaryExpr:e
          {: RESULT = e; :}

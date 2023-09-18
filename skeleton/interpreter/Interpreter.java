@@ -125,11 +125,7 @@ public class Interpreter {
             }
         } else if (expr instanceof UnaryExpr) {
             UnaryExpr unaryExpr = (UnaryExpr)expr;
-            //System.out.println("unary expression result: " + ((Long)evaluate(new ConstExpr(0, null)) - (Long)evaluate(unaryExpr.getExpr())));
-            switch (unaryExpr.getOperator()) {
-                case UnaryExpr.UMINUS: return ((Long)evaluate(new ConstExpr(0, null)) - (Long)evaluate(unaryExpr.getExpr()));
-                default: throw new RuntimeException("Unhandled operator");
-            }
+            return - ((Long)evaluate(unaryExpr.getExpr()));
         } else {
             throw new RuntimeException("Unhandled Expr type");
         }
