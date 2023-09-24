@@ -4,35 +4,18 @@ import java.io.PrintStream;
 
 public class Program extends ASTNode {
 
-    final Expr expr;
-    final Return ret;
+    final Stmt s;
 
-    public Program(Expr expr, Location loc) {
+    public Program(Stmt s, Location loc) {
         super(loc);
-        this.expr = expr;
-        this.ret = null;
+        this.s = s;
     }
 
-    public Program(Return ret, Location loc) {
-        super(loc);
-        this.ret = ret;
-        this.expr = null;
-    }
-
-    public Expr getExpr() {
-        return expr;
-    }
-
-    public Return getRet() {
-        return ret;
+    public Stmt getStmt() {
+        return s;
     }
 
     public void println(PrintStream ps) {
-        if (ret == null) {
-            ps.println(expr);
-        } else {
-            ps.println(ret);
-        }
-        
+            ps.println(s);        
     }
 }

@@ -2,7 +2,7 @@ package ast;
 
 import java.io.PrintStream;
 
-public class Return extends ASTNode {
+public class Return extends Stmt {
 
     final Expr expr;
 

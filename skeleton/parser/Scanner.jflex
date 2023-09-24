@@ -68,6 +68,17 @@ white_space = {new_line} | [ \t\f]
 ")"               { return symbol(")",  RPAREN); }
 "return"          { return symbol("return",  RETURN); }
 ";"               { return symbol(";",  SEMI); }
+"if"              { return symbol("if",  IF); }
+"<="              { return symbol("<=",  LE); }
+">="              { return symbol(">=",  GE); }
+"=="              { return symbol("==",  EQ); }
+"!="              { return symbol("!=",  NE); }
+"<"               { return symbol("<",  LT); }
+">"               { return symbol(">",  GT); }
+"&&"              { return symbol("&&",  AND); }
+"||"              { return symbol("||",  OR); }
+"!"               { return symbol("!",  NOT); }
+""                { return symbol("",  EMPTY); }
 
 /* comments */
 "/*" [^*] ~"*/" | "/*" "*"+ "/"

@@ -23,6 +23,7 @@ run_test() {
 	if [[ $output != *"error"* ]]
 	then
 		score=$((score + $points))
+		echo "Score: $score"
 	fi
 }
 
