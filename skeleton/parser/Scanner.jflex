@@ -49,6 +49,7 @@ import interpreter.Interpreter;
 
 
 IntLiteral = 0 | [1-9][0-9]*
+Ident = [:jletter:] [:jletterdigit:]*
 
 new_line = \r|\n|\r\n;
 
@@ -69,6 +70,7 @@ white_space = {new_line} | [ \t\f]
 "return"          { return symbol("return",  RETURN); }
 ";"               { return symbol(";",  SEMI); }
 "if"              { return symbol("if",  IF); }
+"else"            { return symbol("else",  ELSE); }
 "<="              { return symbol("<=",  LE); }
 ">="              { return symbol(">=",  GE); }
 "=="              { return symbol("==",  EQ); }
@@ -78,7 +80,14 @@ white_space = {new_line} | [ \t\f]
 "&&"              { return symbol("&&",  AND); }
 "||"              { return symbol("||",  OR); }
 "!"               { return symbol("!",  NOT); }
-""                { return symbol("",  EMPTY); }
+"print"           { return symbol("print",  PRINT); }
+"{"               { return symbol("{",  OBRACKET); }
+"}"               { return symbol("}",  CBRACKET); }
+"="               { return symbol("=",  ASSIGN); }
+"int"               { return symbol("int",  INT); }
+
+/* identifiers */
+{Ident} { return symbol("Ident", IDENT, yytext().toString()); }
 
 /* comments */
 "/*" [^*] ~"*/" | "/*" "*"+ "/"

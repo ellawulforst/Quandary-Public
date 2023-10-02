@@ -1,10 +1,10 @@
 package ast;
 
-public class Cond extends Expr {
+public class Cond extends ASTNode {
 
-    public static final int AND = 7;
-    public static final int OR = 8;
-    public static final int NOT = 9;
+    public static final int AND = 1;
+    public static final int OR = 2;
+    public static final int NOT = 3;
 
     final int operator;
     final Cond cond1;
@@ -15,7 +15,6 @@ public class Cond extends Expr {
         this.cond1 = cond1;
         this.cond2 = cond2;
         this.operator = operator;
-        
     }
 
     public Cond getLeftCond() {

@@ -102,11 +102,67 @@ public class Interpreter {
     }
 
     Object executeRoot(Program astRoot, long arg) {
-        return evaluate(((Return) astRoot.getStmt()).getExpr());
+        return evaluate(((Return) astRoot.getFuncDef().getStmtList().getStmt()).getExpr());
+    }
+/*
+    Object evaluate(CondExpr condExpr) {
+            switch (condExpr.getOperator()) {
+                case CondExpr.LE: return (boolean)evaluate(condExpr.getLeftExpr()) <= (boolean)evaluate(condExpr.getRightExpr());
+                case CondExpr.GE: return (boolean)evaluate(condExpr.getLeftExpr()) >= (boolean)evaluate(condExpr.getRightExpr());
+                case CondExpr.EQ: return (boolean)evaluate(condExpr.getLeftExpr()) == (boolean)evaluate(condExpr.getRightExpr());
+                case CondExpr.NE: return (boolean)evaluate(condExpr.getLeftExpr()) != (boolean)evaluate(condExpr.getRightExpr());
+                case CondExpr.LT: return (boolean)evaluate(condExpr.getLeftExpr()) < (boolean)evaluate(condExpr.getRightExpr());
+                case CondExpr.GT: return (boolean)evaluate(condExpr.getLeftExpr()) > (boolean)evaluate(condExpr.getRightExpr());
+                default: throw new RuntimeException("Unhandled CondExpr operator");
+            }
     }
 
+    Object evaluate(Cond cond) {
+            switch (cond.getOperator()) {
+                case Cond.AND: return (boolean)evaluate(cond.getLeftCond()) && (boolean)evaluate(cond.getRightCond());
+                case Cond.OR: return (boolean)evaluate(cond.getLeftCond()) || (boolean)evaluate(cond.getRightCond());
+                case Cond.NOT: return !(boolean)evaluate(cond.getRightCond()); 
+                default: throw new RuntimeException("Unhandled Cond operator");
+            }
+    }
+
+    Object evaluate(Stmt stmt) {
+        if (stmt instanceof ifStmt) {
+            ifStmt ifStmt = (ifStmt) stmt;
+            if (ifStmt.getCond()) {
+                return evaluate(ifStmt.getStmt());
+            }
+            //IF COND IS FALSE, RETURN WHAT NOW?
+        }else if (stmt instanceof ifElseStmt) {
+            ifElseStmt ifElseStmt = (ifElseStmt)stmt;
+            if (evaluate(ifElseStmt.getCond())) {
+                return evaluate(ifElseStmt.getIfStmt());
+            } else {
+                return evaluate(ifElseStmt.getElseStmt());
+            }
+        } else if (stmt instanceof Print) {
+            Print print = (Print)stmt;
+            return system.out.println(print.toString());
+        } else if (stmt instanceof Return) {
+            //IDK WHAT TO DO FOR THIS, CALL EXECUTE ROOT ORRRRR?
+        } else {
+            throw new RuntimeException("Unhandled Stmt type");
+        }
+    }
+
+    //DONT KNOW WHAT TO DO HERE
+    Object evaluate(StmtList stmtList) {
+        //if its just a stmt, evaluate stmt
+        //if its a stmt list, recursive call to stmt list?
+        if (stmtList instanceof stmt) {
+            return evaluate(stmtList.getStmt());
+        }else if (stmt instanceof stmtList) {
+            return evaluate(stmtList.getStmtList());
+        }
+    }
+*/
+
     Object evaluate(Expr expr) {
-        //System.out.println(expr);
         if (expr instanceof ConstExpr) {
             return ((ConstExpr)expr).getValue();
         }else if (expr instanceof BinaryExpr) {
@@ -120,14 +176,6 @@ public class Interpreter {
         } else if (expr instanceof UnaryExpr) {
             UnaryExpr unaryExpr = (UnaryExpr)expr;
             return - ((Long)evaluate(unaryExpr.getExpr()));
-        } else if (expr instanceof BinaryExpr) {
-            BinaryExpr binaryExpr = (BinaryExpr)expr;
-            switch (binaryExpr.getOperator()) {
-                case BinaryExpr.PLUS: return (Long)evaluate(binaryExpr.getLeftExpr()) + (Long)evaluate(binaryExpr.getRightExpr());
-                case BinaryExpr.BMINUS: return (Long)evaluate(binaryExpr.getLeftExpr()) - (Long)evaluate(binaryExpr.getRightExpr());
-                case BinaryExpr.MULT: return (Long)evaluate(binaryExpr.getLeftExpr()) * (Long)evaluate(binaryExpr.getRightExpr());
-                default: throw new RuntimeException("Unhandled operator");
-            }
         } else {
             throw new RuntimeException("Unhandled Expr type");
         }

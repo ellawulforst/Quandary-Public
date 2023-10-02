@@ -1,6 +1,6 @@
 package ast;
 
-public class CondExpr extends Expr {
+public class CondExpr extends ASTNode {
 
     public static final int LE = 1;
     public static final int GE = 2;
@@ -12,21 +12,19 @@ public class CondExpr extends Expr {
     final int operator;
     final Expr expr1;
     final Expr expr2;
-    
 
     public CondExpr(Expr expr1, int operator, Expr expr2, Location loc) {
         super(loc);
         this.operator = operator;
         this.expr1 = expr1;
         this.expr2 = expr2;
-        
     }
 
-    public BinaryCond getLeftExpr() {
+    public Expr getLeftExpr() {
         return expr1;
     }
 
-    public BinaryCond getRightExpr() {
+    public Expr getRightExpr() {
         return expr2;
     }
 

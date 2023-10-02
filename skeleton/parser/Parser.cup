@@ -28,50 +28,76 @@ parser code {:
 :};
 
 terminal PLUS, LPAREN, RPAREN;
-terminal RETURN, MULT, MINUS, SEMI, UMINUS;
-terminal IF, LE, GE, EQ, NE, LT, GT, NOT, AND, OR;
-terminal EMPTY;
+terminal RETURN, MULT, MINUS, SEMI;
+terminal IF, LE, GE, EQ, NE, LT, GT, NOT, AND, OR, ELSE;
 terminal Long    INTCONST;
+terminal String  IDENT;
+terminal OBRACKET, CBRACKET, ASSIGN, PRINT, INT;
 
 non terminal Program         program;
-non terminal Return          return;
 non terminal Expr            expr;
 non terminal BinaryExpr      binaryExpr;
-non terminal Stmt            stmt;
+non terminal FuncDef         funcDef;
+non terminal VarDecl         varDecl;
 non terminal StmtList        stmtList;
-non terminal Cond           cond;
+non terminal Stmt            stmt;
 
+/* non terminal Cond            cond;
+non terminal Type            type; */
+
+/* precedence OR;
+precedence AND;
+precedence NOT;
+precedence LE, GE, EQ, NE, LT, GT; */
 
 precedence left PLUS, MINUS;
 precedence left MULT;
-precedence left UMINUS;
-//precedence left ELSE; // resolves dangling else
+precedence left ELSE; //resolves dangling else
 
 start with program;
 
-program ::= stmtList:sl
-            {: RESULT = new Program(sl, loc(slleft, slright)); :}
+program ::= funcDef:fcd
+            {: RESULT = new Program(fcd, loc(fcdleft, fcdright)); :}
+         ;
+
+funcDef ::= varDecl:funcName LPAREN varDecl:params RPAREN OBRACKET stmtList:sl CBRACKET
+            {: RESULT = new FuncDef(funcName, params, sl, loc(funcNameleft, funcNameright)); :}
+         ;
+
+varDecl ::= INT IDENT:ident
+            {: RESULT = new VarDecl(1, ident, loc(identleft, identright)); :}
          ;
 
 stmtList ::= stmt:s stmtList:sl
-            {: RESULT = new Program(sl, loc(slleft, slright)); :}
-         | EMPTY
+            {: RESULT = new StmtList(s, sl, loc(sleft, sright)); :}
+         | 
          ;
+
+/*stmt ::= varDecl:vd ASSIGN expr:e SEMI
+         {: RESULT = new VarAssign(vd, expr, loc(vdleft, vdright)); :}
+      | IF LPAREN cond:c RPAREN stmt:s
+         {: RESULT = new IfStmt(c, s, loc(cleft, cright)); :}
+      | IF LPAREN cond:c RPAREN stmt:ifStmt ELSE stmt:elseStmt
+         {: RESULT = new IfElseStmt(c, ifStmt, elseStmt, loc(cleft, cright)); :}
+      | PRINT expr:e SEMI
+         {: RESULT = new Print(e, loc(eleft, eright)); :} */
 
 stmt ::= RETURN expr:e SEMI
          {: RESULT = new Return(e, loc(eleft, eright)); :}
-      |  IF LPAREN cond:c RPAREN stmt:s
-         {: RESULT = new IfStmt(c, s, loc(cleft, cright)); :}
+      | OBRACKET stmtList:sl CBRACKET
+         {: RESULT = sl; :}
       ;
 
 expr ::= INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
+      | IDENT:ident
+         {: RESULT = new Ident(ident, loc(identleft, identright)); :}
+      |  MINUS expr:e 
+         {: RESULT = new UnaryExpr(e, loc(eleft, eright)); :}
       |  binaryExpr:e
          {: RESULT = e; :}
       |  LPAREN expr:e RPAREN
          {: RESULT = e; :}
-      |  MINUS expr:e 
-         {: RESULT = new UnaryExpr(e, loc(eleft, eright)); :}
       ;
 
 binaryExpr ::= expr:e1 PLUS expr:e2
@@ -81,8 +107,7 @@ binaryExpr ::= expr:e1 PLUS expr:e2
             |  expr:e1 MULT expr:e2
                {: RESULT = new BinaryExpr(e1, BinaryExpr.MULT, e2, loc(e1left, e1right)); :}
             ;
-
-cond ::= expr:e1 LE expr:e2
+/* cond ::= expr:e1 LE expr:e2
             {: RESULT = new CondExpr(e1, Cond.LE, e2, loc(e1left, e1right)); :}
       |  expr:e1 GE expr:e2
             {: RESULT = new CondExpr(e1, Cond.GE, e2, loc(e1left, e1right)); :}
@@ -102,4 +127,14 @@ cond ::= expr:e1 LE expr:e2
             {: RESULT = new Cond(nil, Cond.NOT, c, loc(cleft, cright)); :}
       | LPAREN cond:c RPAREN
             {: RESULT = c; :}
-      ;
+      ; */
+/* andCond ::= cond:c1 AND cond:c2
+            {: RESULT = new Cond(c1, Cond.AND, c2, loc(c1left, c1right)); :}
+         ; */
+/* orCond ::= cond:c1 OR cond:c2
+            {: RESULT = new Cond(c1, Cond.OR, c2, loc(c1left, c1right)); :}
+         ; */
+/* notCond ::= NOT cond:c
+            {: RESULT = new Cond(nil, Cond.NOT, c, loc(cleft, cright)); :}
+         ; */
+

@@ -18,4 +18,9 @@ public abstract class IfStmt extends Stmt {
     Cond getCond() {
         return this.cond;
     }
+
+    @Override
+    public String toString() {
+        return "if (" + cond + ") {" + stmt + "}";
+    }
 }
