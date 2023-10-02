@@ -1,32 +1,32 @@
 package ast;
 
-public abstract class IfElseStmt extends Stmt {
+public class IfElseStmt extends Stmt {
 
-    final Cond cond;
+    final CondExpr cond;
     final Stmt ifStmt;
     final Stmt elseStmt;
 
-    IfElseStmt(Cond cond, Stmt ifStmt, Stmt elseStmt, Location loc) {
+    public IfElseStmt(CondExpr cond, Stmt ifStmt, Stmt elseStmt, Location loc) {
         super(loc);
         this.cond = cond;
         this.ifStmt = ifStmt;
         this.elseStmt = elseStmt;
     }
 
-    Stmt getIfStmt() {
+    public Stmt getIfStmt() {
         return this.ifStmt;
     }
 
-    Stmt getElseStmt() {
+    public Stmt getElseStmt() {
         return this.elseStmt;
     }
 
-    Cond getCond() {
+    public CondExpr getCond() {
         return this.cond;
     }
     
     @Override
     public String toString() {
-        return "if (" + cond + ") {" + ifStmt + "}" + "else {" + elseStmt + "}";
+        return "if (" + cond + ") {\n\t" + ifStmt + "\n}" + "else {\n\t" + elseStmt + "\n}";
     }
 }

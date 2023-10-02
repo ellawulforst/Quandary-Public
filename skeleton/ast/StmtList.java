@@ -15,22 +15,13 @@ public class StmtList extends Stmt {
     public Stmt getStmt() {
         return stmt;
     }
-    
-/*
-   final Stmt stmt;
 
-   public StmtList(Stmt stmt, Location loc) {
-        super(loc);
-        this.stmt = stmt;
+    public StmtList getStmtList() {
+        return stmtList;
     }
-
-    public Stmt getStmt() {
-        return stmt;
-    }
-    */
 
     @Override
     public String toString() {
-        return null;
+        return stmt + "\n";
     }
 }

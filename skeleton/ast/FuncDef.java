@@ -16,6 +16,10 @@ public class FuncDef extends Expr {
     public VarDecl getVarDecl() {
         return vd;
     }
+
+    public VarDecl getParams() {
+        return params;
+    }
     
     public StmtList getStmtList() {
         return stmtList;
@@ -23,6 +27,6 @@ public class FuncDef extends Expr {
 
     @Override
     public String toString() {
-        return vd + " ( " + params + " )" + " { " + stmtList + " } ";
+        return vd + " ( " + params + " )" + " {\n\t" + stmtList + "\n}";
     }
 }

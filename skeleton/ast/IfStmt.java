@@ -1,26 +1,26 @@
 package ast;
 
-public abstract class IfStmt extends Stmt {
+public class IfStmt extends Stmt {
 
-    final Cond cond;
+    final CondExpr cond;
     final Stmt stmt;
 
-    IfStmt(Cond cond, Stmt stmt, Location loc) {
+    public IfStmt(CondExpr cond, Stmt stmt, Location loc) {
         super(loc);
         this.cond = cond;
         this.stmt = stmt;
     }
 
-    Stmt getStmt() {
+    public Stmt getStmt() {
         return this.stmt;
     }
 
-    Cond getCond() {
+    public CondExpr getCond() {
         return this.cond;
     }
 
     @Override
     public String toString() {
-        return "if (" + cond + ") {" + stmt + "}";
+        return "if (" + cond + ") {\n\t" + stmt + "\n}";
     }
 }

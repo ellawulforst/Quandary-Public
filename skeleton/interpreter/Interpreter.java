@@ -2,6 +2,7 @@ package interpreter;
 
 import java.io.*;
 import java.util.Random;
+import java.util.*;
 
 import parser.ParserWrapper;
 import ast.*;
@@ -102,80 +103,158 @@ public class Interpreter {
     }
 
     Object executeRoot(Program astRoot, long arg) {
-        return evaluate(((Return) astRoot.getFuncDef().getStmtList().getStmt()).getExpr());
+        return runFunc(astRoot.getFuncDef(), arg);
     }
-/*
-    Object evaluate(CondExpr condExpr) {
+
+    Object runFunc(FuncDef fd, long arg) {
+        Map<String, Long> scopeVars = new HashMap<String, Long>();
+        Map<String, Long> cmdArgs = new HashMap<String, Long>();
+        cmdArgs.put(fd.getParams().getIdent(), arg);
+        //scopeVars.put(fd.getParams().getIdent(), arg);
+        //System.out.println("fd stmt list: " + fd.getStmtList());
+        //System.out.println("fd.stmtlist.stmt: " + fd.getStmtList().getStmt());
+        StmtList stmtList = fd.getStmtList();
+        
+        while (stmtList != null) {
+            //EVEN AFTER I HIT A RETURN STATEMENT, I KEEP GOING? IS A CONDITION FOR THIS NOT RIGHT?
+            Object ret = evaluate(stmtList.getStmt(), scopeVars, cmdArgs);
+            
+            if (ret instanceof VarAssign) {
+                VarAssign varAssign = (VarAssign) ret;
+                //System.out.println("the varassign stmt iin the whie loop of runFunc: " + varAssign);
+                String ident = varAssign.getVarDecl().getIdent();
+                //System.out.println("the varassign ident iin the whie loop of runFunc: " + ident);
+                //System.out.println("the scopeVars iin the whie loop of runFunc: " + scopeVars);
+                //System.out.println("calling eval to get value");
+                long value = (long) evaluate(varAssign.getExpr(), scopeVars, cmdArgs);
+                //System.out.println("finished calling eval to get value");
+                //System.out.println("the varassign value iin the whie loop of runFunc: " + value);
+                if(scopeVars.containsKey(ident)) {
+                    fatalError("wrong", 222);
+                } else {
+                    scopeVars.put(ident, value);
+                }
+            } else if (ret instanceof Return) {
+                Return ret2 = (Return) ret;
+                return evaluate(ret2.getExpr(), scopeVars, cmdArgs);
+            }
+                stmtList = stmtList.getStmtList();
+        }
+        return null;
+    }
+
+    Object evaluate(Stmt stmt, Map<String, Long> currVars, Map<String, Long> parVars) {
+        //will either return a return or a variable declaration
+        //System.out.println("evalstmt statement: " + stmt);
+        if (stmt instanceof VarAssign || stmt instanceof Return) {
+            //System.out.println("this is an assign or return. the statement: " + stmt);
+            return stmt;
+        } else if (stmt instanceof StmtList) {
+                StmtList stmtList = (StmtList) stmt;
+                Map<String, Long> newParVars = new HashMap<String, Long>(parVars);
+                newParVars.putAll(currVars);
+                Map<String, Long> subVars = new HashMap<String, Long>();
+                while (stmtList != null) {
+                    Object ret = evaluate(stmtList.getStmt(), subVars, newParVars);
+                    if (ret instanceof VarAssign) {
+                        VarAssign varAssign = (VarAssign) ret;
+                        String ident = varAssign.getVarDecl().getIdent();
+                        long value = (long) evaluate(varAssign.getExpr(), subVars, newParVars);
+                        if(subVars.containsKey(ident)) {
+                            fatalError("wrong", 222);
+                        }
+                        if(newParVars.containsKey(ident)) {
+                            fatalError("wrong", 222);
+                        } else {
+                            subVars.put(ident, value);
+                        }
+                    } else if (ret instanceof Return) {
+                        Return ret2 = (Return) ret;
+                        Expr retConst = new ConstExpr((Long) evaluate(ret2.getExpr(), subVars, newParVars), null);
+                        Stmt retVar = new Return(retConst, null);
+                        return retVar;
+                    }
+                    stmtList = stmtList.getStmtList();
+                }
+                return stmt;
+        } else if (stmt instanceof IfStmt) {
+                IfStmt ifStmt = (IfStmt) stmt;
+                //System.out.println("in if stmt");
+                //System.out.println("ifstmt cond: " + ifStmt.getCond());
+                Boolean cond = evaluate(ifStmt.getCond(), currVars, parVars);
+                //System.out.println("ifstmt cond boolean: " + cond);
+                if (cond) {
+                    return evaluate(ifStmt.getStmt(), currVars, parVars);
+                }
+        } else if (stmt instanceof IfElseStmt) {
+                IfElseStmt ifElseStmt = (IfElseStmt) stmt;
+                //System.out.println(ifElseStmt.getCond());
+                Boolean cond = evaluate(ifElseStmt.getCond(), currVars, parVars);
+                //System.out.println("ifelse cond boolean: " + cond);
+                if (cond) {
+                    return evaluate(ifElseStmt.getIfStmt(), currVars, parVars);
+                } else {
+                    return evaluate(ifElseStmt.getElseStmt(), currVars, parVars);
+                }
+        } else if (stmt instanceof Print) {
+                Print print = (Print) stmt;
+                System.out.println(evaluate(print.getExpr(), currVars, parVars));
+        }
+            return null;
+        
+    }
+
+    Boolean evaluate(CondExpr condExpr, Map<String, Long> currVars, Map<String, Long> parVars) {
             switch (condExpr.getOperator()) {
-                case CondExpr.LE: return (boolean)evaluate(condExpr.getLeftExpr()) <= (boolean)evaluate(condExpr.getRightExpr());
-                case CondExpr.GE: return (boolean)evaluate(condExpr.getLeftExpr()) >= (boolean)evaluate(condExpr.getRightExpr());
-                case CondExpr.EQ: return (boolean)evaluate(condExpr.getLeftExpr()) == (boolean)evaluate(condExpr.getRightExpr());
-                case CondExpr.NE: return (boolean)evaluate(condExpr.getLeftExpr()) != (boolean)evaluate(condExpr.getRightExpr());
-                case CondExpr.LT: return (boolean)evaluate(condExpr.getLeftExpr()) < (boolean)evaluate(condExpr.getRightExpr());
-                case CondExpr.GT: return (boolean)evaluate(condExpr.getLeftExpr()) > (boolean)evaluate(condExpr.getRightExpr());
+                case CondExpr.LE: return (boolean)((long)evaluate(condExpr.getLeftExpr(), currVars, parVars) <= (long)evaluate(condExpr.getRightExpr(), currVars, parVars));
+                case CondExpr.GE: return (boolean)((long)evaluate(condExpr.getLeftExpr(), currVars, parVars) >= (long)evaluate(condExpr.getRightExpr(), currVars, parVars));
+                case CondExpr.EQ: return (boolean)((long) evaluate(condExpr.getLeftExpr(), currVars, parVars) == (long)evaluate(condExpr.getRightExpr(), currVars, parVars));
+                case CondExpr.NE: return (boolean)((long) evaluate(condExpr.getLeftExpr(), currVars, parVars) != (long)evaluate(condExpr.getRightExpr(), currVars, parVars));
+                case CondExpr.LT: return (boolean)((long) evaluate(condExpr.getLeftExpr(), currVars, parVars) < (long)evaluate(condExpr.getRightExpr(), currVars, parVars));
+                case CondExpr.GT: return (boolean)((long) evaluate(condExpr.getLeftExpr(), currVars, parVars) > (long)evaluate(condExpr.getRightExpr(), currVars, parVars));
+                case CondExpr.AND: return (boolean)evaluate(condExpr.getLeftCond(), currVars, parVars) && (boolean)evaluate(condExpr.getRightCond(), currVars, parVars);
+                case CondExpr.OR: return (boolean)evaluate(condExpr.getLeftCond(), currVars, parVars) || (boolean)evaluate(condExpr.getRightCond(), currVars, parVars);
+                case CondExpr.NOT: return !(boolean)evaluate(condExpr.getRightCond(), currVars, parVars); 
                 default: throw new RuntimeException("Unhandled CondExpr operator");
             }
     }
 
-    Object evaluate(Cond cond) {
-            switch (cond.getOperator()) {
-                case Cond.AND: return (boolean)evaluate(cond.getLeftCond()) && (boolean)evaluate(cond.getRightCond());
-                case Cond.OR: return (boolean)evaluate(cond.getLeftCond()) || (boolean)evaluate(cond.getRightCond());
-                case Cond.NOT: return !(boolean)evaluate(cond.getRightCond()); 
-                default: throw new RuntimeException("Unhandled Cond operator");
-            }
-    }
-
-    Object evaluate(Stmt stmt) {
-        if (stmt instanceof ifStmt) {
-            ifStmt ifStmt = (ifStmt) stmt;
-            if (ifStmt.getCond()) {
-                return evaluate(ifStmt.getStmt());
-            }
-            //IF COND IS FALSE, RETURN WHAT NOW?
-        }else if (stmt instanceof ifElseStmt) {
-            ifElseStmt ifElseStmt = (ifElseStmt)stmt;
-            if (evaluate(ifElseStmt.getCond())) {
-                return evaluate(ifElseStmt.getIfStmt());
-            } else {
-                return evaluate(ifElseStmt.getElseStmt());
-            }
-        } else if (stmt instanceof Print) {
-            Print print = (Print)stmt;
-            return system.out.println(print.toString());
-        } else if (stmt instanceof Return) {
-            //IDK WHAT TO DO FOR THIS, CALL EXECUTE ROOT ORRRRR?
-        } else {
-            throw new RuntimeException("Unhandled Stmt type");
-        }
-    }
-
-    //DONT KNOW WHAT TO DO HERE
-    Object evaluate(StmtList stmtList) {
-        //if its just a stmt, evaluate stmt
-        //if its a stmt list, recursive call to stmt list?
-        if (stmtList instanceof stmt) {
-            return evaluate(stmtList.getStmt());
-        }else if (stmt instanceof stmtList) {
-            return evaluate(stmtList.getStmtList());
-        }
-    }
-*/
-
-    Object evaluate(Expr expr) {
+    Object evaluate(Expr expr, Map<String, Long> currVars, Map<String, Long> parVars) {
+        //System.out.println("in eval expr, scope is " + currVars + " " + parVars);
+        //System.out.println("the expr in eval expr: " + expr);
         if (expr instanceof ConstExpr) {
+            
             return ((ConstExpr)expr).getValue();
-        }else if (expr instanceof BinaryExpr) {
+        } else if (expr instanceof Ident) {
+            
+            //System.out.println("in eval ident, ident is " + ((Ident)expr));
+            Ident ident = (Ident) expr;
+            //System.out.println("currvars in eval expr ident " + currVars);
+            //System.out.println("ident in eval expr ident " + ident);
+            if (currVars.containsKey(ident.toString())) {
+                //System.out.println("currvars does contain key");
+                //System.out.println("currVars.get(ident) " + currVars.get(ident.toString()));
+                return currVars.get(ident.toString());
+            } else {
+                //System.out.println("currvars does not contain key");
+                return parVars.get(ident.toString()); 
+            }
+        }
+        else if (expr instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr)expr;
+            
+            //System.out.println("in eval bin, op is " + binaryExpr.getOperator());
+            //System.out.println("the currVars iin the whie loop of runFunc: " + currVars);
+            //System.out.println("the left expr in binaryexpr: " + binaryExpr.getLeftExpr());
             switch (binaryExpr.getOperator()) {
-                case BinaryExpr.PLUS: return (Long)evaluate(binaryExpr.getLeftExpr()) + (Long)evaluate(binaryExpr.getRightExpr());
-                case BinaryExpr.BMINUS: return (Long)evaluate(binaryExpr.getLeftExpr()) - (Long)evaluate(binaryExpr.getRightExpr());
-                case BinaryExpr.MULT: return (Long)evaluate(binaryExpr.getLeftExpr()) * (Long)evaluate(binaryExpr.getRightExpr());
+                case BinaryExpr.PLUS: return (Long)evaluate(binaryExpr.getLeftExpr(), currVars, parVars) + (Long)evaluate(binaryExpr.getRightExpr(), currVars, parVars);
+                case BinaryExpr.BMINUS: return (Long)evaluate(binaryExpr.getLeftExpr(), currVars, parVars) - (Long)evaluate(binaryExpr.getRightExpr(), currVars, parVars);
+                case BinaryExpr.MULT: return (Long)evaluate(binaryExpr.getLeftExpr(), currVars, parVars) * (Long)evaluate(binaryExpr.getRightExpr(), currVars, parVars);
                 default: throw new RuntimeException("Unhandled operator");
             }
         } else if (expr instanceof UnaryExpr) {
             UnaryExpr unaryExpr = (UnaryExpr)expr;
-            return - ((Long)evaluate(unaryExpr.getExpr()));
+            return - ((Long)evaluate(unaryExpr.getExpr(), currVars, parVars));
         } else {
             throw new RuntimeException("Unhandled Expr type");
         }

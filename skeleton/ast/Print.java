@@ -15,7 +15,12 @@ public class Print extends Stmt {
         return expr;
     }
 
-    public void println(PrintStream ps) {
-        ps.println(expr);
+    @Override
+    public String toString() {
+        return "print(" + expr + ")";
     }
+
+    /* public void println(PrintStream ps) {
+        ps.println(expr.toString());
+    } */
 }

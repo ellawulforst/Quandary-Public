@@ -16,6 +16,6 @@ public class Program extends ASTNode {
     }
 
     public void println(PrintStream ps) {
-            ps.println(fcd);        
+        ps.println(fcd.toString());        
     }
 }

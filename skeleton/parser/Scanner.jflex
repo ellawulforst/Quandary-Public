@@ -49,7 +49,7 @@ import interpreter.Interpreter;
 
 
 IntLiteral = 0 | [1-9][0-9]*
-Ident = [:jletter:] [:jletterdigit:]*
+Ident = [_a-zA-Z][_a-zA-Z0-9]*
 
 new_line = \r|\n|\r\n;
 
@@ -84,7 +84,7 @@ white_space = {new_line} | [ \t\f]
 "{"               { return symbol("{",  OBRACKET); }
 "}"               { return symbol("}",  CBRACKET); }
 "="               { return symbol("=",  ASSIGN); }
-"int"               { return symbol("int",  INT); }
+"int"             { return symbol("int",  INT); }
 
 /* identifiers */
 {Ident} { return symbol("Ident", IDENT, yytext().toString()); }
