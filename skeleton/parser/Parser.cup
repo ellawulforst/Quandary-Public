@@ -108,8 +108,6 @@ stmt ::= varDecl:vd ASSIGN expr:e SEMI
          {: RESULT = new Return(e, loc(eleft, eright)); :}
       | OBRACKET stmtList:sl CBRACKET
          {: RESULT = sl; :}
-      | condExpr:ce
-         {: RESULT = ce; :}
       ;
 
 exprList ::= neExprList:neel
