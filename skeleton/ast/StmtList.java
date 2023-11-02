@@ -2,7 +2,6 @@ package ast;
 
 public class StmtList extends Stmt {
 
-    
     final Stmt stmt;
     final StmtList stmtList;
 

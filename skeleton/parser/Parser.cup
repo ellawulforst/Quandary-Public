@@ -32,41 +32,62 @@ terminal RETURN, MULT, MINUS, SEMI;
 terminal IF, LE, GE, EQ, NE, LT, GT, NOT, AND, OR, ELSE;
 terminal Long    INTCONST;
 terminal String  IDENT;
-terminal OBRACKET, CBRACKET, ASSIGN, PRINT, INT;
+terminal OBRACKET, CBRACKET, ASSIGN, PRINT, INT, COMMA;
 
-non terminal Program         program;
-non terminal Expr            expr;
-non terminal BinaryExpr      binaryExpr;
-non terminal FuncDef         funcDef;
-non terminal VarDecl         varDecl;
-non terminal StmtList        stmtList;
-non terminal Stmt            stmt;
-non terminal CondExpr        condExpr;
-
-non terminal Cond            cond;
-non terminal Type            type;
+non terminal Program             program;
+non terminal Expr                expr;
+non terminal BinaryExpr          binaryExpr;
+non terminal VarDecl             varDecl;
+non terminal StmtList            stmtList;
+non terminal Stmt                stmt;
+non terminal CondExpr            condExpr;
+non terminal FuncDefList         funcDefList;
+non terminal FuncDef             funcDef;
+non terminal FormalDeclList      formalDeclList;
+non terminal NeFormalDeclList    neFormalDeclList;
+non terminal ExprList            exprList;
+non terminal NeExprList          neExprList;
 
 precedence left OR;
 precedence left AND;
 precedence left NOT;
 precedence left LE, GE, EQ, NE, LT, GT;
 
+precedence left ELSE; //resolves dangling else
 precedence left PLUS, MINUS;
 precedence left MULT;
-precedence left ELSE; //resolves dangling else
+
 
 start with program;
 
-program ::= funcDef:fcd
-            {: RESULT = new Program(fcd, loc(fcdleft, fcdright)); :}
+program ::= funcDefList:fcdl
+            {: RESULT = new Program(fcdl, loc(fcdlleft, fcdlright)); :}
          ;
 
-funcDef ::= varDecl:funcName LPAREN varDecl:params RPAREN OBRACKET stmtList:sl CBRACKET
-            {: RESULT = new FuncDef(funcName, params, sl, loc(funcNameleft, funcNameright)); :}
+funcDefList ::= funcDef:fcd funcDefList:fcdl
+            {: RESULT = new FuncDefList(fcd, fcdl, loc(fcdleft, fcdright)); :}
+         | /* empty */
+            {: RESULT = null; :}
+         ;
+
+funcDef ::= varDecl:funcName LPAREN formalDeclList:fdl RPAREN OBRACKET stmtList:sl CBRACKET
+            {: RESULT = new FuncDef(funcName, fdl, sl, loc(funcNameleft, funcNameright)); :}
          ;
 
 varDecl ::= INT IDENT:ident
             {: RESULT = new VarDecl(1, ident, loc(identleft, identright)); :}
+         ;
+
+formalDeclList ::= neFormalDeclList:nefdl
+            {: RESULT = nefdl; :}
+         | /* empty */
+            {: RESULT = null; :}
+         ;
+
+neFormalDeclList ::= varDecl:vd COMMA neFormalDeclList:nefdl
+            {: RESULT = new NeFormalDeclList(vd, nefdl, loc(vdleft, vdright)); :}
+         | varDecl:vd
+            {:  RESULT = new NeFormalDeclList(vd, null, loc(vdleft, vdright)); :} // OR DO I JUST DO REULT = VD
          ;
 
 stmtList ::= stmt:s stmtList:sl
@@ -87,12 +108,26 @@ stmt ::= varDecl:vd ASSIGN expr:e SEMI
          {: RESULT = new Return(e, loc(eleft, eright)); :}
       | OBRACKET stmtList:sl CBRACKET
          {: RESULT = sl; :}
-      | condExpr:ce 
+      | condExpr:ce
          {: RESULT = ce; :}
+      ;
+
+exprList ::= neExprList:neel
+         {: RESULT = neel; :}
+      | /* empty */
+         {: RESULT = null; :}
+      ;
+
+neExprList ::= expr:e COMMA neExprList:neel
+         {: RESULT = new NeExprList(e, neel, loc(eleft, eright)); :}
+      | expr:e
+         {: RESULT = new NeExprList(e, null, loc(eleft, eright)); :}
       ;
 
 expr ::= INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
+      /*| IDENT:ident LPAREN exprList:el RPAREN*/
+       /*  {: RESULT = new CallExpr(ident, el, loc(identleft, identright)); :}*/
       | IDENT:ident
          {: RESULT = new Ident(ident, loc(identleft, identright)); :}
       |  MINUS expr:e 

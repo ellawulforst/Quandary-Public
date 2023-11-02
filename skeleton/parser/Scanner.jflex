@@ -85,6 +85,7 @@ white_space = {new_line} | [ \t\f]
 "}"               { return symbol("}",  CBRACKET); }
 "="               { return symbol("=",  ASSIGN); }
 "int"             { return symbol("int",  INT); }
+","               { return symbol(",",  COMMA); }
 
 /* identifiers */
 {Ident} { return symbol("Ident", IDENT, yytext().toString()); }

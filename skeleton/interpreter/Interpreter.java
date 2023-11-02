@@ -9,6 +9,8 @@ import ast.*;
 
 public class Interpreter {
 
+    Map<Ident, FuncDef> funcs = new HashMap<Ident, FuncDef>();
+
     // Process return codes
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_PARSING_ERROR = 1;
@@ -102,33 +104,46 @@ public class Interpreter {
         }
     }
 
-    Object executeRoot(Program astRoot, long arg) {
-        return runFunc(astRoot.getFuncDef(), arg);
+    Object executeRoot(Program astRoot, long[] args) {
+        FuncDef mainFunc;
+        FuncDefList funcList = astRoot.getFuncDefList();
+        FuncDef func = funcList.getFuncDef();
+        
+        while (func != null) {
+            if (func.getFuncName().equals("main")) {
+                mainFunc = func.getNextInList();
+            }
+            funcs.put(func.getFuncName(), func);
+        }
+        return runFunc(mainFunc, args);
     }
 
-    Object runFunc(FuncDef fd, long arg) {
+    Object runFunc(FuncDef fd, long[] args) { //HOW DO I PASS IN THE FORMAL ARG VALUES?
         Map<String, Long> scopeVars = new HashMap<String, Long>();
         Map<String, Long> cmdArgs = new HashMap<String, Long>();
-        cmdArgs.put(fd.getParams().getIdent(), arg);
-        //scopeVars.put(fd.getParams().getIdent(), arg);
-        //System.out.println("fd stmt list: " + fd.getStmtList());
-        //System.out.println("fd.stmtlist.stmt: " + fd.getStmtList().getStmt());
+        
+        //if there are no params, fd has an empty decl list, dont need to do anything
+        //if multiple params, need to loop through decl list in the func def and add each
+        FormalDeclList declList = fd.getFormalDeclList();
+        if (declList instanceof NeFormalDeclList) {
+            cmdArgs.put(declList.getNeFormalDeclList().getVarDecl().getIdent(), args[0]);
+            NeFormalDeclList nextDecl = declList.getNeFormalDeclList().getNeFormalDeclList();
+            int i = 1;
+            while (nextDecl != null) //HOW TO TELL IF THERE IS A NEXT DECL? {
+                cmdArgs.put(nextDecl.getVarDecl().getIdent(), args[x++]);
+                nextDecl = nextDecl.getNeFormalDeclList();
+            }
+        }
+        
         StmtList stmtList = fd.getStmtList();
         
         while (stmtList != null) {
-            //EVEN AFTER I HIT A RETURN STATEMENT, I KEEP GOING? IS A CONDITION FOR THIS NOT RIGHT?
             Object ret = evaluate(stmtList.getStmt(), scopeVars, cmdArgs);
             
             if (ret instanceof VarAssign) {
                 VarAssign varAssign = (VarAssign) ret;
-                //System.out.println("the varassign stmt iin the whie loop of runFunc: " + varAssign);
                 String ident = varAssign.getVarDecl().getIdent();
-                //System.out.println("the varassign ident iin the whie loop of runFunc: " + ident);
-                //System.out.println("the scopeVars iin the whie loop of runFunc: " + scopeVars);
-                //System.out.println("calling eval to get value");
                 long value = (long) evaluate(varAssign.getExpr(), scopeVars, cmdArgs);
-                //System.out.println("finished calling eval to get value");
-                //System.out.println("the varassign value iin the whie loop of runFunc: " + value);
                 if(scopeVars.containsKey(ident)) {
                     fatalError("wrong", 222);
                 } else {
@@ -145,9 +160,7 @@ public class Interpreter {
 
     Object evaluate(Stmt stmt, Map<String, Long> currVars, Map<String, Long> parVars) {
         //will either return a return or a variable declaration
-        //System.out.println("evalstmt statement: " + stmt);
         if (stmt instanceof VarAssign || stmt instanceof Return) {
-            //System.out.println("this is an assign or return. the statement: " + stmt);
             return stmt;
         } else if (stmt instanceof StmtList) {
                 StmtList stmtList = (StmtList) stmt;
@@ -179,18 +192,13 @@ public class Interpreter {
                 return stmt;
         } else if (stmt instanceof IfStmt) {
                 IfStmt ifStmt = (IfStmt) stmt;
-                //System.out.println("in if stmt");
-                //System.out.println("ifstmt cond: " + ifStmt.getCond());
                 Boolean cond = evaluate(ifStmt.getCond(), currVars, parVars);
-                //System.out.println("ifstmt cond boolean: " + cond);
                 if (cond) {
                     return evaluate(ifStmt.getStmt(), currVars, parVars);
                 }
         } else if (stmt instanceof IfElseStmt) {
                 IfElseStmt ifElseStmt = (IfElseStmt) stmt;
-                //System.out.println(ifElseStmt.getCond());
                 Boolean cond = evaluate(ifElseStmt.getCond(), currVars, parVars);
-                //System.out.println("ifelse cond boolean: " + cond);
                 if (cond) {
                     return evaluate(ifElseStmt.getIfStmt(), currVars, parVars);
                 } else {
@@ -220,32 +228,18 @@ public class Interpreter {
     }
 
     Object evaluate(Expr expr, Map<String, Long> currVars, Map<String, Long> parVars) {
-        //System.out.println("in eval expr, scope is " + currVars + " " + parVars);
-        //System.out.println("the expr in eval expr: " + expr);
         if (expr instanceof ConstExpr) {
-            
             return ((ConstExpr)expr).getValue();
         } else if (expr instanceof Ident) {
-            
-            //System.out.println("in eval ident, ident is " + ((Ident)expr));
             Ident ident = (Ident) expr;
-            //System.out.println("currvars in eval expr ident " + currVars);
-            //System.out.println("ident in eval expr ident " + ident);
             if (currVars.containsKey(ident.toString())) {
-                //System.out.println("currvars does contain key");
-                //System.out.println("currVars.get(ident) " + currVars.get(ident.toString()));
                 return currVars.get(ident.toString());
             } else {
-                //System.out.println("currvars does not contain key");
                 return parVars.get(ident.toString()); 
             }
         }
         else if (expr instanceof BinaryExpr) {
             BinaryExpr binaryExpr = (BinaryExpr)expr;
-            
-            //System.out.println("in eval bin, op is " + binaryExpr.getOperator());
-            //System.out.println("the currVars iin the whie loop of runFunc: " + currVars);
-            //System.out.println("the left expr in binaryexpr: " + binaryExpr.getLeftExpr());
             switch (binaryExpr.getOperator()) {
                 case BinaryExpr.PLUS: return (Long)evaluate(binaryExpr.getLeftExpr(), currVars, parVars) + (Long)evaluate(binaryExpr.getRightExpr(), currVars, parVars);
                 case BinaryExpr.BMINUS: return (Long)evaluate(binaryExpr.getLeftExpr(), currVars, parVars) - (Long)evaluate(binaryExpr.getRightExpr(), currVars, parVars);
@@ -255,6 +249,15 @@ public class Interpreter {
         } else if (expr instanceof UnaryExpr) {
             UnaryExpr unaryExpr = (UnaryExpr)expr;
             return - ((Long)evaluate(unaryExpr.getExpr(), currVars, parVars));
+        } else if (expr instanceof CallExpr) {
+                CallExpr call = (CallExpr) expr;
+                Ident funcCalled = call.getCallTo();
+                List params = new ArrayList<>();
+                while (call != null && call.getNeExprList().getExpr() != null) {
+                    Long val = evaluate(call.getNeExprList().getExpr());
+                    params.add(c)
+                }
+                runFunc(funcs.get(funcCalled), )
         } else {
             throw new RuntimeException("Unhandled Expr type");
         }

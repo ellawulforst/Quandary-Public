@@ -3,22 +3,26 @@ package ast;
 public class FuncDef extends Expr {
 
     final VarDecl vd;
-    final VarDecl params;
+    final FormalDeclList fdl;
     final StmtList stmtList;
 
-    public FuncDef(VarDecl vd, VarDecl params, StmtList stmtList, Location loc) {
+    public FuncDef(VarDecl vd, FormalDeclList fdl, StmtList stmtList, Location loc) {
         super(loc);
         this.vd = vd;
-        this.params = params;
+        this.fdl = fdl;
         this.stmtList = stmtList;
+    }
+
+    public String getFuncName() {
+        return vd.getIdent();
     }
 
     public VarDecl getVarDecl() {
         return vd;
     }
 
-    public VarDecl getParams() {
-        return params;
+    public FormalDeclList getFormalDeclList() {
+        return fdl;
     }
     
     public StmtList getStmtList() {
@@ -27,6 +31,6 @@ public class FuncDef extends Expr {
 
     @Override
     public String toString() {
-        return vd + " ( " + params + " )" + " {\n\t" + stmtList + "\n}";
+        returnvd + "(" + fdl + ")" + "\n{" + stmtList + "}";
     }
 }
