@@ -1,6 +1,6 @@
 package ast;
 
-public class FuncDefList extends FuncDef {
+public class FuncDefList extends ASTNode {
 
     final FuncDef fcd;
     final FuncDefList fcdl;
@@ -9,10 +9,6 @@ public class FuncDefList extends FuncDef {
         super(loc);
         this.fcd = fcd;
         this.fcdl = fcdl;
-    }
-
-    public FuncDef getNextInList() {
-        return fcdl.getFuncDef();
     }
 
     public FuncDef getFuncDef() {
@@ -25,6 +21,7 @@ public class FuncDefList extends FuncDef {
 
     @Override
     public String toString() {
-        return fcd + fcdl;
+        return fcd + "\n" + fcdl;
+        
     }
 }

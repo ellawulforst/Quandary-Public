@@ -1,20 +1,26 @@
 package ast;
 
-public class FormalDeclList extends NeFormalDeclList {
+public class FormalDeclList extends ASTNode {
 
-    final NeFormalDeclList nefdl;
+    final VarDecl vd;
+    final FormalDeclList nefdl;
 
-    public FormalDeclList(NeFormalDeclList nefdl, Location loc) {
+    public FormalDeclList(VarDecl vd, FormalDeclList nefdl, Location loc) {
         super(loc);
         this.nefdl = nefdl;
+        this.vd = vd;
     }
 
-    public NeFormalDeclList getNeFormalDeclList() {
+    public VarDecl getVarDecl() {
+        return vd;
+    }
+
+    public FormalDeclList getNeFormalDeclList() {
         return nefdl;
     }
 
     @Override
     public String toString() {
-        return nefdl;
+        return vd + " " + nefdl;
     }
 }

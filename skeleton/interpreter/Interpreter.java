@@ -3,13 +3,14 @@ package interpreter;
 import java.io.*;
 import java.util.Random;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import parser.ParserWrapper;
 import ast.*;
 
 public class Interpreter {
 
-    Map<Ident, FuncDef> funcs = new HashMap<Ident, FuncDef>();
+    Map<String, FuncDef> funcs = new HashMap<String, FuncDef>();
 
     // Process return codes
     public static final int EXIT_SUCCESS = 0;
@@ -32,7 +33,7 @@ public class Interpreter {
         long heapBytes = 1 << 14;
         int i = 0;
         String filename;
-        long quandaryArg;
+        List quandaryArgs = new ArrayList<Long>();
         try {
             for (; i < args.length; i++) {
                 String arg = args[i];
@@ -53,8 +54,11 @@ public class Interpreter {
                     break;
                 }
             }
-            filename = args[i];
-            quandaryArg = Long.valueOf(args[i + 1]);
+            filename = args[i++];
+            while(i < args.length) {
+                quandaryArgs.add(Long.valueOf(args[i]));
+                i++;
+            }
         } catch (Exception ex) {
             System.out.println("Expected format: quandary [OPTIONS] QUANDARY_PROGRAM_FILE INTEGER_ARGUMENT");
             System.out.println("Options:");
@@ -80,7 +84,7 @@ public class Interpreter {
         astRoot.println(System.out);
         interpreter = new Interpreter(astRoot);
         interpreter.initMemoryManager(gcType, heapBytes);
-        String returnValueAsString = interpreter.executeRoot(astRoot, quandaryArg).toString();
+        String returnValueAsString = interpreter.executeRoot(astRoot, quandaryArgs).toString();
         System.out.println("Interpreter returned " + returnValueAsString);
     }
 
@@ -104,58 +108,77 @@ public class Interpreter {
         }
     }
 
-    Object executeRoot(Program astRoot, long[] args) {
-        FuncDef mainFunc;
+    Object executeRoot(Program astRoot, List args) {
+        FuncDef mainFunc = null;
         FuncDefList funcList = astRoot.getFuncDefList();
-        FuncDef func = funcList.getFuncDef();
-        
-        while (func != null) {
-            if (func.getFuncName().equals("main")) {
-                mainFunc = func.getNextInList();
+        //System.out.println("astRoot.getFuncDefList(): " + funcList);
+        FuncDef currentFunc;// = funcList.getFuncDef();
+        while (funcList != null) {
+            currentFunc = funcList.getFuncDef();
+            //System.out.println("curr func: " + currentFunc);
+            if (currentFunc.getFuncName().equals("main")) {
+                mainFunc = currentFunc;
             }
-            funcs.put(func.getFuncName(), func);
+            funcs.put(currentFunc.getFuncName(), currentFunc);
+            //System.out.println("funclist: " + funcList);
+            funcList = funcList.getFuncDefList();
+            //System.out.println("funclist: " + funcList);
         }
+        //System.out.println("mainfunc line 127: " + mainFunc);
+        //System.out.println("args line 127: " + args);
         return runFunc(mainFunc, args);
     }
 
-    Object runFunc(FuncDef fd, long[] args) { //HOW DO I PASS IN THE FORMAL ARG VALUES?
-        Map<String, Long> scopeVars = new HashMap<String, Long>();
-        Map<String, Long> cmdArgs = new HashMap<String, Long>();
-        
-        //if there are no params, fd has an empty decl list, dont need to do anything
-        //if multiple params, need to loop through decl list in the func def and add each
-        FormalDeclList declList = fd.getFormalDeclList();
-        if (declList instanceof NeFormalDeclList) {
-            cmdArgs.put(declList.getNeFormalDeclList().getVarDecl().getIdent(), args[0]);
-            NeFormalDeclList nextDecl = declList.getNeFormalDeclList().getNeFormalDeclList();
-            int i = 1;
-            while (nextDecl != null) //HOW TO TELL IF THERE IS A NEXT DECL? {
-                cmdArgs.put(nextDecl.getVarDecl().getIdent(), args[x++]);
-                nextDecl = nextDecl.getNeFormalDeclList();
-            }
-        }
-        
-        StmtList stmtList = fd.getStmtList();
-        
-        while (stmtList != null) {
-            Object ret = evaluate(stmtList.getStmt(), scopeVars, cmdArgs);
+    Object runFunc(FuncDef fd, List args) {
             
-            if (ret instanceof VarAssign) {
-                VarAssign varAssign = (VarAssign) ret;
-                String ident = varAssign.getVarDecl().getIdent();
-                long value = (long) evaluate(varAssign.getExpr(), scopeVars, cmdArgs);
-                if(scopeVars.containsKey(ident)) {
-                    fatalError("wrong", 222);
-                } else {
-                    scopeVars.put(ident, value);
-                }
-            } else if (ret instanceof Return) {
-                Return ret2 = (Return) ret;
-                return evaluate(ret2.getExpr(), scopeVars, cmdArgs);
+            System.out.println("not randomInt");
+            //System.out.println("hi im here");
+            //System.out.println("fd: " + fd);
+            Map<String, Long> scopeVars = new HashMap<String, Long>();
+            Map<String, Long> cmdArgs = new HashMap<String, Long>();
+            
+            //if there are no params, fd has an empty decl list, dont need to do anything
+            //if multiple params, need to loop through decl list in the func def and add each
+            //System.out.println("fd: " + fd);
+            FormalDeclList declList = fd.getFormalDeclList();
+            VarDecl var;
+            int i = 0;
+            while (declList != null) {
+                //System.out.println("declList: " + declList);
+                //System.out.println("declList: " + declList);
+                //System.out.println("declList.getNeFormalDeclList(): " + declList.getVarDecl().getIdent());
+                //System.out.println("value: " + args.toArray()[0]);
+
+                var = declList.getVarDecl();
+                //System.out.println("var: " + var);
+                //System.out.println("value: " + args.toArray()[i]);
+                cmdArgs.put(var.getIdent(), (Long) (args.toArray())[i++]);
+
+                declList = declList.getNeFormalDeclList();
+                //System.out.println("declList: " + declList);
             }
-                stmtList = stmtList.getStmtList();
-        }
-        return null;
+            
+            StmtList stmtList = fd.getStmtList();
+            
+            while (stmtList != null) {
+                Object ret = evaluate(stmtList.getStmt(), scopeVars, cmdArgs);
+                
+                if (ret instanceof VarAssign) {
+                    VarAssign varAssign = (VarAssign) ret;
+                    String ident = varAssign.getVarDecl().getIdent();
+                    long value = (long) evaluate(varAssign.getExpr(), scopeVars, cmdArgs);
+                    if(scopeVars.containsKey(ident)) {
+                        fatalError("wrong", 222);
+                    } else {
+                        scopeVars.put(ident, value);
+                    }
+                } else if (ret instanceof Return) {
+                    Return ret2 = (Return) ret;
+                    return evaluate(ret2.getExpr(), scopeVars, cmdArgs);
+                }
+                    stmtList = stmtList.getStmtList();
+            }
+            return null;
     }
 
     Object evaluate(Stmt stmt, Map<String, Long> currVars, Map<String, Long> parVars) {
@@ -228,6 +251,7 @@ public class Interpreter {
     }
 
     Object evaluate(Expr expr, Map<String, Long> currVars, Map<String, Long> parVars) {
+        
         if (expr instanceof ConstExpr) {
             return ((ConstExpr)expr).getValue();
         } else if (expr instanceof Ident) {
@@ -250,14 +274,35 @@ public class Interpreter {
             UnaryExpr unaryExpr = (UnaryExpr)expr;
             return - ((Long)evaluate(unaryExpr.getExpr(), currVars, parVars));
         } else if (expr instanceof CallExpr) {
+                System.out.println("evaluting call expr");
                 CallExpr call = (CallExpr) expr;
-                Ident funcCalled = call.getCallTo();
+                //get funcdef and exprlist from callexpr
+                //search funclist for funcdef for the ident
+                
+                FuncDef funcDef = funcs.get(call.getCallTo());
+                System.out.println("fd: " + funcDef);
+
+                //loop thruogh exprlist, evaluate each expr, add to para map
                 List params = new ArrayList<>();
-                while (call != null && call.getNeExprList().getExpr() != null) {
-                    Long val = evaluate(call.getNeExprList().getExpr());
-                    params.add(c)
+                ExprList eList = call.getParams();
+                while (eList != null) {
+                    params.add(evaluate(eList.getExpr(), currVars, parVars));
+                    eList = eList.getNeExprList();
                 }
-                runFunc(funcs.get(funcCalled), )
+
+                if (call.getCallTo().equals("randomInt")) {
+                    System.out.println("in random int");
+                    return ThreadLocalRandom.current().nextLong(0, (long) params.get(0));
+                }
+                
+                //FormalDeclList varList = 
+                String funcCalled = call.getCallTo();
+                //if is randomInt
+                if (funcCalled.equals("randomInt")) {
+                    return new Random().nextLong();
+                }
+                System.out.println("calling runFunc to " + funcCalled);
+                return runFunc(funcs.get(funcCalled), params);
         } else {
             throw new RuntimeException("Unhandled Expr type");
         }

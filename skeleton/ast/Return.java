@@ -21,6 +21,6 @@ public class Return extends Stmt {
     }
 
     public void println(PrintStream ps) {
-        ps.println("return " + expr + ";");
+        ps.println("\nreturn " + expr + ";");
     }
 }

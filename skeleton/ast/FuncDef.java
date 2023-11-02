@@ -1,6 +1,6 @@
 package ast;
 
-public class FuncDef extends Expr {
+public class FuncDef extends ASTNode {
 
     final VarDecl vd;
     final FormalDeclList fdl;
@@ -31,6 +31,6 @@ public class FuncDef extends Expr {
 
     @Override
     public String toString() {
-        returnvd + "(" + fdl + ")" + "\n{" + stmtList + "}";
+        return vd + "(" + fdl + ")" + "{" + stmtList + "\n}";
     }
 }

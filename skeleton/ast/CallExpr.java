@@ -2,20 +2,20 @@ package ast;
 
 public class CallExpr extends Expr {
 
-    final Ident ident;
+    final String ident;
     final ExprList el;
 
-    public CallExpr(Ident ident, ExprList el, Location loc) {
+    public CallExpr(String ident, ExprList el, Location loc) {
         super(loc);
         this.ident = ident;
         this.el = el;
     }
 
-    public Expr getCallTo() {
+    public String getCallTo() {
         return ident;
     }
     
-    public Expr getParams() {
+    public ExprList getParams() {
         return el;
     }
 

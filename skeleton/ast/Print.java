@@ -17,7 +17,7 @@ public class Print extends Stmt {
 
     @Override
     public String toString() {
-        return "print(" + expr + ")";
+        return "\nprint(" + expr + ")";
     }
 
     /* public void println(PrintStream ps) {

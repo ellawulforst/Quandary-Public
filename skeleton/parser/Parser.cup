@@ -44,9 +44,9 @@ non terminal CondExpr            condExpr;
 non terminal FuncDefList         funcDefList;
 non terminal FuncDef             funcDef;
 non terminal FormalDeclList      formalDeclList;
-non terminal NeFormalDeclList    neFormalDeclList;
+non terminal FormalDeclList    neFormalDeclList;
 non terminal ExprList            exprList;
-non terminal NeExprList          neExprList;
+non terminal ExprList            neExprList;
 
 precedence left OR;
 precedence left AND;
@@ -85,9 +85,9 @@ formalDeclList ::= neFormalDeclList:nefdl
          ;
 
 neFormalDeclList ::= varDecl:vd COMMA neFormalDeclList:nefdl
-            {: RESULT = new NeFormalDeclList(vd, nefdl, loc(vdleft, vdright)); :}
+            {: RESULT = new FormalDeclList(vd, nefdl, loc(vdleft, vdright)); :}
          | varDecl:vd
-            {:  RESULT = new NeFormalDeclList(vd, null, loc(vdleft, vdright)); :} // OR DO I JUST DO REULT = VD
+            {:  RESULT = new FormalDeclList(vd, null, loc(vdleft, vdright)); :} // OR DO I JUST DO REULT = VD
          ;
 
 stmtList ::= stmt:s stmtList:sl
@@ -117,15 +117,15 @@ exprList ::= neExprList:neel
       ;
 
 neExprList ::= expr:e COMMA neExprList:neel
-         {: RESULT = new NeExprList(e, neel, loc(eleft, eright)); :}
+         {: RESULT = new ExprList(e, neel, loc(eleft, eright)); :}
       | expr:e
-         {: RESULT = new NeExprList(e, null, loc(eleft, eright)); :}
+         {: RESULT = new ExprList(e, null, loc(eleft, eright)); :}
       ;
 
 expr ::= INTCONST:c
          {: RESULT = new ConstExpr(c, loc(cleft, cright)); :}
-      /*| IDENT:ident LPAREN exprList:el RPAREN*/
-       /*  {: RESULT = new CallExpr(ident, el, loc(identleft, identright)); :}*/
+      | IDENT:ident LPAREN exprList:el RPAREN
+         {: RESULT = new CallExpr(ident, el, loc(identleft, identright)); :}
       | IDENT:ident
          {: RESULT = new Ident(ident, loc(identleft, identright)); :}
       |  MINUS expr:e 
