@@ -28,11 +28,11 @@ parser code {:
 :};
 
 terminal PLUS, LPAREN, RPAREN;
-terminal RETURN, MULT, MINUS, SEMI;
+terminal RETURN, MULT, MINUS;
 terminal IF, LE, GE, EQ, NE, LT, GT, NOT, AND, OR, ELSE, WHILE;
 terminal Long    INTCONST;
 terminal String  IDENT;
-terminal OBRACKET, CBRACKET, ASSIGN, PRINT, INT, COMMA, REF, Q, NIL, DOT, MUTABLE;
+terminal OBRACKET, CBRACKET, ASSIGN, PRINT, INT, COMMA, REF, Q, NIL, DOT, MUTABLE, SEMI;
 
 non terminal Program             program;
 non terminal Expr                expr;
@@ -77,12 +77,12 @@ funcDef ::= varDecl:funcName LPAREN formalDeclList:fdl RPAREN OBRACKET stmtList:
 
 varDecl ::= type:t IDENT:ident
             {: RESULT = new VarDecl(false, t, ident, loc(identleft, identright)); :}
-         |  MUTABLE INT IDENT:ident
+         |  MUTABLE type:t IDENT:ident
             {: RESULT = new VarDecl(true, t, ident, loc(identleft, identright)); :}
          ;
 
-type ::= INT:int
-            {: RESULT = new Type(1, loc(intleft, intright)); :}
+type ::= INT:int1
+            {: RESULT = new Type(1, loc(int1left, int1right)); :}
          | REF:ref
             {: RESULT = new Type(2, loc(refleft, refright)); :}
          | Q:q
@@ -98,7 +98,7 @@ formalDeclList ::= neFormalDeclList:nefdl
 neFormalDeclList ::= varDecl:vd COMMA neFormalDeclList:nefdl
             {: RESULT = new FormalDeclList(vd, nefdl, loc(vdleft, vdright)); :}
          | varDecl:vd
-            {: RESULT = new FormalDeclList(vd, null, loc(vdleft, vdright)); :} // OR DO I JUST DO REULT = VD
+            {: RESULT = new FormalDeclList(vd, null, loc(vdleft, vdright)); :}
          ;
 
 stmtList ::= stmt:s stmtList:sl
@@ -106,17 +106,17 @@ stmtList ::= stmt:s stmtList:sl
          | /*empty*/
             {: RESULT = null; :}
          ;
-
+/*sGetMax.q, ssetRightandLeft.q, calc2.q */
 stmt ::= varDecl:vd ASSIGN expr:e SEMI
          {: RESULT = new VarAssign(vd, e, loc(vdleft, vdright)); :}
-      | IDENT:ident ASSIGN expr:e
+      | IDENT:ident ASSIGN expr:e SEMI
          {: RESULT = new Reassign(ident, e, loc(identleft, identright)); :}
       | IF LPAREN condExpr:c RPAREN stmt:s
          {: RESULT = new IfStmt(c, s, loc(cleft, cright)); :}
       | IF LPAREN condExpr:c RPAREN stmt:ifStmt ELSE stmt:elseStmt
          {: RESULT = new IfElseStmt(c, ifStmt, elseStmt, loc(cleft, cright)); :}
       | WHILE LPAREN condExpr:c RPAREN stmt:s
-         {: RESULT = new While(c, stmt, loc(cleft, cright)); :}
+         {: RESULT = new While(c, s, loc(cleft, cright)); :}
       | IDENT:ident LPAREN exprList:el RPAREN SEMI
          {: RESULT = new CallStmt(ident, el, loc(identleft, identright)); :}
       | PRINT expr:e SEMI

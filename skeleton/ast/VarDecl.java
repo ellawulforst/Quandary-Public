@@ -2,19 +2,19 @@ package ast;
 
 public class VarDecl extends ASTNode {
 
-    final int type;
+    final Type type;
     final String ident;
     final boolean isMutable;
 
-    public VarDecl(boolean isMutable, int type, String ident, Location loc) {
+    public VarDecl(boolean isMutable, Type type, String ident, Location loc) {
         super(loc);
         this.type = type;
         this.ident = ident;
         this.isMutable = isMutable;
     }
 
-    public int getType() {
-        return type;
+    public Type getType() {
+        return this.type;
     }
     
     public String getIdent() {
@@ -28,7 +28,7 @@ public class VarDecl extends ASTNode {
     @Override
     public String toString() {
         String s = null;
-        switch (type.getType()) {
+        switch (this.type.getType()) {
             case 1:  s = "int"; break;
             case 2:  s = "Ref"; break;
             case 3:  s = "Q"; break;

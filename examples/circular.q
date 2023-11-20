@@ -13,7 +13,7 @@ Q main(int arg) {
   mutable int n = arg;
   mutable Ref list = nil;
   while (n > 1) {
-    if (3 != 0)
+    if (isPrime(n) != 0)
       list = n . list;
     n = n - 1;
   }

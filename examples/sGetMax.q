@@ -1,13 +1,18 @@
 mutable Q main(int arg) {
   mutable Ref list = nil;
+  print(111111111);
   list = add(list, 4);
+  
+  print(111111111);
   list = add(list, 3);
+  /*
   list = add(list, 5);
   list = add(list, 40);
   list = add(list, 11);
   list = add(list, 32);
   list = add(list, 27);
   list = add(list, 1);
+  */
   
   return getMax(list);
 }
@@ -15,7 +20,9 @@ mutable Q main(int arg) {
 mutable Ref add(Ref list, Q elem) {
   if (isNil(list) != 0) {
     return elem . nil;
+    print(22222);
   }
+  print(3333333);
   mutable Ref curr = list;
   while (isNil(right(curr)) == 0) {
     curr = (Ref)right(curr);

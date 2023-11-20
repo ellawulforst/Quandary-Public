@@ -21,6 +21,6 @@ public class StmtList extends Stmt {
 
     @Override
     public String toString() {
-        return stmt + "\n";
+        return stmt + "\n" + stmtList;
     }
 }
