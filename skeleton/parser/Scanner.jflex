@@ -71,6 +71,7 @@ white_space = {new_line} | [ \t\f]
 ";"               { return symbol(";",  SEMI); }
 "if"              { return symbol("if",  IF); }
 "else"            { return symbol("else",  ELSE); }
+"while"           { return symbol("while",  WHILE); }
 "<="              { return symbol("<=",  LE); }
 ">="              { return symbol(">=",  GE); }
 "=="              { return symbol("==",  EQ); }
@@ -86,6 +87,11 @@ white_space = {new_line} | [ \t\f]
 "="               { return symbol("=",  ASSIGN); }
 "int"             { return symbol("int",  INT); }
 ","               { return symbol(",",  COMMA); }
+"Ref"             { return symbol("Ref",  REF); }
+"Q"               { return symbol("Q",  Q); }
+"nil"             { return symbol("nil",  NIL); }
+"."               { return symbol(".",  DOT); }
+"mutable"         { return symbol("mutable",  MUTABLE); }
 
 /* identifiers */
 {Ident} { return symbol("Ident", IDENT, yytext().toString()); }

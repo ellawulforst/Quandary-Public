@@ -111,51 +111,43 @@ public class Interpreter {
     Object executeRoot(Program astRoot, List args) {
         FuncDef mainFunc = null;
         FuncDefList funcList = astRoot.getFuncDefList();
-        //System.out.println("astRoot.getFuncDefList(): " + funcList);
         FuncDef currentFunc;// = funcList.getFuncDef();
         while (funcList != null) {
             currentFunc = funcList.getFuncDef();
-            //System.out.println("curr func: " + currentFunc);
             if (currentFunc.getFuncName().equals("main")) {
                 mainFunc = currentFunc;
             }
             funcs.put(currentFunc.getFuncName(), currentFunc);
-            //System.out.println("funclist: " + funcList);
             funcList = funcList.getFuncDefList();
-            //System.out.println("funclist: " + funcList);
         }
-        //System.out.println("mainfunc line 127: " + mainFunc);
-        //System.out.println("args line 127: " + args);
         return runFunc(mainFunc, args);
     }
 
+    
+
     Object runFunc(FuncDef fd, List args) {
-            
-            System.out.println("not randomInt");
-            //System.out.println("hi im here");
-            //System.out.println("fd: " + fd);
-            Map<String, Long> scopeVars = new HashMap<String, Long>();
-            Map<String, Long> cmdArgs = new HashMap<String, Long>();
+        //TODO: NOT OBJECT HERE, IDK WHAT THO
+            Map<String, Object> scopeVars = new HashMap<String, Object>();
+            Map<String, Object> cmdArgs = new HashMap<String, Object>();
             
             //if there are no params, fd has an empty decl list, dont need to do anything
             //if multiple params, need to loop through decl list in the func def and add each
-            //System.out.println("fd: " + fd);
             FormalDeclList declList = fd.getFormalDeclList();
             VarDecl var;
             int i = 0;
             while (declList != null) {
-                //System.out.println("declList: " + declList);
-                //System.out.println("declList: " + declList);
-                //System.out.println("declList.getNeFormalDeclList(): " + declList.getVarDecl().getIdent());
-                //System.out.println("value: " + args.toArray()[0]);
-
                 var = declList.getVarDecl();
-                //System.out.println("var: " + var);
-                //System.out.println("value: " + args.toArray()[i]);
-                cmdArgs.put(var.getIdent(), (Long) (args.toArray())[i++]);
+                //TODO: HOW TO CAST TO PROPER TYPES HERE
+                //TODO: WHAT JAVA TYPES ARE REF AND Q?
+                int type = var.getType();
+                if (type == 1) {
+                    newVar.value = (Long) (args.toArray())[i++];
+                } else if (type == 2) {
+                } 
 
+                cmdArgs.put(var.getIdent(), newVar);
+                
                 declList = declList.getNeFormalDeclList();
-                //System.out.println("declList: " + declList);
             }
             
             StmtList stmtList = fd.getStmtList();
@@ -172,6 +164,13 @@ public class Interpreter {
                     } else {
                         scopeVars.put(ident, value);
                     }
+                } else if (ret instanceof Reassign) {
+                    //TODO: must get vardecl for this variable and make sure its mutable
+                    Reassign reassign = (Reassign) ret;
+                    String ident = reassigngetIdent();
+                    //TODO: HOW TO CAST TO PROPER TYPES HERE
+                    long value = (long) evaluate(reassign.getExpr(), scopeVars, cmdArgs);
+                    scopeVars.replace(ident, value);
                 } else if (ret instanceof Return) {
                     Return ret2 = (Return) ret;
                     return evaluate(ret2.getExpr(), scopeVars, cmdArgs);
@@ -227,7 +226,25 @@ public class Interpreter {
                 } else {
                     return evaluate(ifElseStmt.getElseStmt(), currVars, parVars);
                 }
-        } else if (stmt instanceof Print) {
+        } else if (stmt instanceof While) {
+                While whileStmt = (While) stmt;
+                Boolean cond = evaluate(whileStmt.getCond(), currVars, parVars);
+                while (cond) {
+                    //TODO: HOW TO RETURN MULTIPLE THINGS HERE? take out return?
+                    cond = evaluate(whileStmt.getCond(), currVars, parVars);
+                    execute(whileStmt.getStmt(), currVars, parVars);
+                }
+        } else if (stmt instanceof CallStmt) {
+            //GET EXPR FORM CALL STMT, RUN FUNC ON IT, SEND IDENT AND EXPR TO CALLEXPR
+                CallStmt callStmt = (CallStmt) expr;
+                //get funcdef and exprlist from callstmt
+                String callIdent = callStmt.getCallTo();
+                ExprList params = callStmt.getParams();
+
+                CallExpr callExpr = new CallExpr(callIdent, params, loc(callStmtleft, callStmtright));
+
+                evaluate(callExpr, curVars, ParVars);
+        }  else if (stmt instanceof Print) {
                 Print print = (Print) stmt;
                 System.out.println(evaluate(print.getExpr(), currVars, parVars));
         }
@@ -251,7 +268,6 @@ public class Interpreter {
     }
 
     Object evaluate(Expr expr, Map<String, Long> currVars, Map<String, Long> parVars) {
-        
         if (expr instanceof ConstExpr) {
             return ((ConstExpr)expr).getValue();
         } else if (expr instanceof Ident) {
@@ -268,6 +284,7 @@ public class Interpreter {
                 case BinaryExpr.PLUS: return (Long)evaluate(binaryExpr.getLeftExpr(), currVars, parVars) + (Long)evaluate(binaryExpr.getRightExpr(), currVars, parVars);
                 case BinaryExpr.BMINUS: return (Long)evaluate(binaryExpr.getLeftExpr(), currVars, parVars) - (Long)evaluate(binaryExpr.getRightExpr(), currVars, parVars);
                 case BinaryExpr.MULT: return (Long)evaluate(binaryExpr.getLeftExpr(), currVars, parVars) * (Long)evaluate(binaryExpr.getRightExpr(), currVars, parVars);
+                case BinaryExpr.DOT: return null;//TODO: HOW TO MAKE A LIST?
                 default: throw new RuntimeException("Unhandled operator");
             }
         } else if (expr instanceof UnaryExpr) {
@@ -291,18 +308,23 @@ public class Interpreter {
                 }
 
                 if (call.getCallTo().equals("randomInt")) {
-                    System.out.println("in random int");
                     return ThreadLocalRandom.current().nextLong(0, (long) params.get(0));
                 }
-                
-                //FormalDeclList varList = 
-                String funcCalled = call.getCallTo();
-                //if is randomInt
-                if (funcCalled.equals("randomInt")) {
-                    return new Random().nextLong();
-                }
-                System.out.println("calling runFunc to " + funcCalled);
                 return runFunc(funcs.get(funcCalled), params);
+        }  else if (expr instanceof Cast) {
+            Cast cast = (Cast) expr;
+            if (cast.getCastedType().getType() == 1) {
+                return ((Long)evaluate(cast.getCastedExpr(), currVars, parVars));
+            } else if (cast.getCastedType().getType() == 2) {
+                //TODO: HOW TO CAST TO REF
+                //return (evaluate(cast.getCastedExpr(), currVars, parVars));
+                return null;
+            } else if (cast.getCastedType().getType() == 3) {
+                //TODO: HOW TO CST TO Q
+                //return ((Object)evaluate(cast.getCastedExpr(), currVars, parVars));
+                return null;
+            }
+            
         } else {
             throw new RuntimeException("Unhandled Expr type");
         }
